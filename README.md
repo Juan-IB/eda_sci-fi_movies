@@ -1,6 +1,6 @@
 # eda_sci-fi_movies
 
-A work of EDA (Exploratory Data Analysis) over sci-fi movies of the early space age, between 40' and 70'.
+A -little- work of EDA (Exploratory Data Analysis) over sci-fi movies of the early space age, between 40' and 70'.
 
 Results are located in the **res** folder, so you <ins>don't</ins> need to run the code to get them.
 
