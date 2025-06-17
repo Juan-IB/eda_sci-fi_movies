@@ -2,7 +2,7 @@
 """
 @File    :   pre_processing.py
 @Time    :   2025/06/07 12:51:49
-@Author  :   Juan Ignacio Bianchini
+@Author  :   Juan-IB
 @Version :   1.0
 @Desc    :   Contains the preprocessing process of datasets.
 """
@@ -15,91 +15,98 @@ import ast
 import pandas
 import duckdb as dd
 
-from functions import hasCountryTarget
+from functions import hasCountryTarget, checkFiles
 
 # %%
 def main():
-    # Crea la estructura de carpetas
+    # Create folder structure
     if not os.path.isdir("datasets/post"): 
         os.makedirs("datasets/post")
     # %%
+    # List of required files
     files: list[str] = ["movie_data_tmbd.csv", "Cine_ciencia_ficcion_espacial_1940-1979_Actualizado.xlsx"]
-
-    # Download dataset form kaggle
-    def checkFiles(files) -> bool:
-        if (len(files) != 1):
-            return os.path.isfile(files[0]) and checkFiles(files[1:])
-        else:
-            return os.path.isfile(files[0])
-
+    
+    # Load dataset 
+    # Fuente: https://www.kaggle.com/datasets/kakarlaramcharan/tmdb-data-0920
+    # License: CC0 - Public Domain
+    # Load dataset from kaggle
     if (checkFiles(files[0])):
         path = kgg.dataset_download("kakarlaramcharan/tmdb-data-0920")
         print("Path to dataset files:", path)
+    # 
 
     movies_raw = pd.read_csv(r"datasets\movie_data_tmbd.csv", sep="|", lineterminator='\n')
 
     # %%
-
-    # %%
     """
     ╔═════════════════════════════════════════════════════════════════════════════╗
-    ║ Extracción de índices internos                                              ║
+    ║ Extract index lists                                                         ║
     ╚═════════════════════════════════════════════════════════════════════════════╝
     """
-    # Extraer índices internos del dataset en atributos multivaluados
+    # Extract internal indexes from the dataset on multi-valued attributes
+    # Each film has values stored in Abstract Syntax Trees (ABS)
+    # ('genres' and 'production_countries')
 
-    # Cada película tiene un array de diccionarios
-    # (cada diccionario es un género)
+    # Each genre entry has a sequence of values,
+    # where each value has a genre id and the genre in question
+
     genres: dict[int, str] = {}
+    
     for i in range(0, len(movies_raw['genres'].values), 1):
+        # Evaluate Python ABG(Abstract Syntax Grammar)
         movie_genres = ast.literal_eval(movies_raw['genres'].values[i])
+
         for genre in movie_genres:
             if (not (genre['id'] in genres)):
                 genres[genre['id']] = genre['name']
-                print(f"Nuevo genero ({i}): {genre['id']}")
+                # print(f"Nuevo genero ({i}): {genre['id']}")
             elif (genres[genre['id']] != genre['name']):
-                # Corrobora que no hay generos diferentes con un mismo id
+                # Verify that there are no different genders with the same id.
                 print("Superposición de géneros (mismo id)")
 
+    # Store genres in csv file
     pd.DataFrame(data={'id': genres.keys(), 'name': genres.values()}).to_csv(r"datasets/post/genres.csv")
 
     # %%
-    # Extrae todos los países del dataset
+    # Each country entry has a sequence of values,
+    # where each value has a country ID and the country in question.
+
     countries: dict[str, str] = {}
 
     for i in range(0, len(movies_raw['production_countries'].values), 1):
+        # Evaluate Python ABG(Abstract Syntax Grammar)
         movie_countries = ast.literal_eval(movies_raw['production_countries'].values[i])
+
         for countrie in movie_countries:
             if (not(countrie['iso_3166_1'] in countries)):
                 countries[countrie['iso_3166_1']] = countrie['name']
-                print(f"Nuevo país ({i}): {countrie['iso_3166_1']}")
+                # print(f"Nuevo país ({i}): {countrie['iso_3166_1']}")
             elif (countries[countrie['iso_3166_1']] != countrie['name']):
-                # Corrobora que no hay generos diferentes con un mismo id
+                # Verify that there are no different countries with the same ID.
                 print("Superposición de país (mismo id)")
 
+    # Store countries in csv file
     pd.DataFrame(data={'id': countries.keys(), 'name': countries.values()}).to_csv(r"datasets/post/countries.csv")
-    
 
     # %%
     """
     ╔═════════════════════════════════════════════════════════════════════════════╗
-    ║ Extracción de datos relevantes                                              ║
+    ║ Extraction of relevant data                                                 ║
     ╚═════════════════════════════════════════════════════════════════════════════╝
     """
 
     # %%
-
-    # 40 - 49, 50 - 59, 60 - 69, 70- 79
-    # EE.UU. - Reino Unido - Italia - URSS - Japón
-    # Lista de países de interes
+    # Values ​​of interest
+    # Years: 40 - 49, 50 - 59, 60 - 69, 70- 79
+    # Countries: US - UK - Italy - SU - JP
     countries_target: dict[str, str] = {"US": "United States of America",
                             "GB": "United Kingdom",
                             "IT": "Italy", "SU": "Soviet Union", "JP": "Japan"}
 
-    # Devuelve las entradas que tienen presupuesto y país definido
+    # Returns entries that have a budget and country defined
     movies = movies_raw[(movies_raw['budget'] != 0 ) & (movies_raw['production_countries'] != "[]")].copy()
     #%%
-    # Filtra la lista de países
+    # Filter the list of countries
     movies = movies[movies["production_countries"].apply(lambda m: hasCountryTarget(m, countries_target))].copy()
     query = f"""--sql
         SELECT budget, YEAR(DATE(release_date)) AS year, title, 
@@ -125,4 +132,35 @@ def main():
     movies.rename(columns={'cpi': 'budget_now'}, inplace=True)
 
     movies.to_csv("datasets/post/movies.csv", index=False)
-# %%
+
+    # %%
+    """
+    ╔═════════════════════════════════════════════════════════════════════════════╗
+    ║ Science Fiction DB (sci-fi)                                                 ║
+    ╚═════════════════════════════════════════════════════════════════════════════╝
+    """
+    movies_scifi = pd.read_excel(
+        r"datasets\Cine_ciencia_ficcion_espacial_1940-1979_Actualizado.xlsx",
+        engine="openpyxl",
+    )
+
+    # %%
+    movies_scifi.rename(
+        columns={
+            "Año": "year",
+            "Presupuesto original (USD)": "budget",
+            "Presupuesto actual aprox. (2025)": "budget_now",
+            "Título": 'title'
+        },
+        inplace=True,
+    )
+    movies_scifi = (
+        movies_scifi[
+            (movies_scifi["budget_now"].notna()) & (movies_scifi["budget_now"] != "Bajo")
+        ]
+        .astype({"budget": int, "budget_now": int})
+        .copy()
+    )
+
+    # %%
+    movies_scifi.to_csv("datasets/post/movies_scifi.csv", index=False)

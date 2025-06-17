@@ -2,7 +2,7 @@
 """
 @File    :   functions.py
 @Time    :   2025/06/07 12:44:32
-@Author  :   Juan Ignacio Bianchini
+@Author  :   Juan-IB
 @Version :   1.0
 @Desc    :   Contains reusable functions
 """
@@ -23,10 +23,27 @@ import ast
 ║ Utilities                                                                   ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
 """
-# Definir rangos de décadas para evaluar costos de producción promedios
+def checkFiles(files: list[str]) -> bool:
+    """
+    Checks if all listed files are found.
+    """
+    return all(os.path.exists(os.path.join('src/datasets', file)) for file in files)
+
+# Recursive version.
+# Due to Python's int optimization,
+# it is more efficient up to 100,000 files #files = 100k (by empirical testing)
+# def checkFiles(files: list[str]) -> bool:
+#    """
+#    Checks if all listed files are found.
+#    """
+#     if (len(files) != 1):
+#         return os.path.isfile(files[0]) and checkFiles(files[1:])
+#     else:
+#         return os.path.isfile(files[0])
+
 def hasCountryTarget(movie: str, countries: dict[str, str]) -> bool:
     """"
-    Confirma si una entrada contiene alguno de los países de interes.
+    Confirms whether an entry contains any of the countries of interest.
     """
     movie_countries = ast.literal_eval(movie)
     for iso_3166_1, country_name in countries.items():
@@ -39,7 +56,13 @@ def hasCountryTarget(movie: str, countries: dict[str, str]) -> bool:
     return False
 
 # %%
+"""
+╔═════════════════════════════════════════════════════════════════════════════╗
+║ Graphs                                                                      ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+"""
 
+# %%
 def statsbyDecade(
         dfs: list[pd.DataFrame], df_atr: str,
         start: int, end: int,
@@ -47,7 +70,14 @@ def statsbyDecade(
         colors: list[str] = None, 
         labels: list[str] = None,
         image_path: str = "img",
-        ):
+        ) -> None:
+    """
+    Generates a line chart showing the evolution of a statistic (such as average, median, minimum, or maximum)
+    for a numeric attribute in several DataFrames, grouped by decades.
+    The chart is saved as an image in a specified folder.
+    """
+    
+
     stats: dict[str, str] = {
         "Promedio": 'mean',
         "Mediana": '50%',
@@ -74,13 +104,6 @@ def statsbyDecade(
         os.makedirs(image_path)
     fig.savefig(f"{image_path}/{stat}-{xlabel}.png")
 
-# %%
-"""
-╔═════════════════════════════════════════════════════════════════════════════╗
-║ Graphs                                                                      ║
-╚═════════════════════════════════════════════════════════════════════════════╝
-"""
-
 def plotLine(
     x, y,
     *,
@@ -90,7 +113,7 @@ def plotLine(
     yformat: str = ',.0f',
     **kwargs,
 ) -> Figure | None:
-    """Function to plot a 3D object by pasing their coordinates"""
+    """Function to plot a line chart."""
 
     standalone: bool = False
     if ax is None:
