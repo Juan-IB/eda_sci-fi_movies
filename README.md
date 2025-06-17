@@ -28,7 +28,7 @@ py .\src\main.py
 This project uses the following dataset:
 
 - **Name:** Movie data (100K+ titles with budget, credits)
-- **Source:** [[Enlace al Dataset](https://www.kaggle.com/datasets/kakarlaramcharan/tmdb-data-0920)]
+- **Source:** [[Link to dataset](https://www.kaggle.com/datasets/kakarlaramcharan/tmdb-data-0920)]
 - **License:** CC0 - Public Domain
 - **Description:** This data contains information on 119K movies & TV shows released internationally scraped from TMBD (TMDB : https://www.themoviedb.org/). TMDB is a community built movie and TV database. We have the following information in the dataset. This dataset is in form of csv which is pipe delimited. This dataset has rich information on title, synposis, year of release, budget, revenue , popularity, original language in which movie/tv show was produced, production companies, production countries, user vote averages, runtime, release date, tagline, actors & directors
 
