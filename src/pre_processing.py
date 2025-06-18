@@ -27,7 +27,7 @@ def main():
     files: list[str] = ["movie_data_tmbd.csv", "Cine_ciencia_ficcion_espacial_1940-1979_Actualizado.xlsx"]
     
     # Load dataset 
-    # Fuente: https://www.kaggle.com/datasets/kakarlaramcharan/tmdb-data-0920
+    # Source: https://www.kaggle.com/datasets/kakarlaramcharan/tmdb-data-0920
     # License: CC0 - Public Domain
     # Load dataset from kaggle
     if (checkFiles(files[0])):
@@ -118,6 +118,7 @@ def main():
     movies = dd.sql(query).df()
 
     # %%
+    # Import Consumer Price Index from U.S. Bureau of Labor page
     # https://data.bls.gov/timeseries/CUUR0000SA0?years_option=all_years
     cpi = pd.read_excel(r"datasets\SeriesReport-20250607233838_4a532a.xlsx", engine="openpyxl", header=11)
     cpi.rename(columns={'Year':'year', 'Annual': 'cpi'}, inplace=True) 
@@ -125,7 +126,7 @@ def main():
     movies['year'] = movies['year'].astype(int)
     cpi['year'] = cpi['year'].astype(int)
 
-    # Paso 2: Unir CPI al DataFrame de películas según el año
+    # Apply the CPI to film data by year
     movies = movies.merge(cpi[(cpi['year'] >= 1940) & (cpi['year'] <= 1979)][['year','cpi']], on='year', how='left', suffixes=('', '_cpi'))
     cpi_now = cpi[cpi['year'] == 2025]['Apr'].values[0]
     movies['cpi'] =  (movies['budget'] * (cpi_now / movies['cpi'])).round().astype(int)
