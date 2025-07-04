@@ -1,4 +1,4 @@
-# eda_sci-fi_movies
+# eda_sci-fi_movies :rocket:
 
 A -little- work of EDA (Exploratory Data Analysis) over sci-fi movies of the early space age, between 40' and 70'.
 
